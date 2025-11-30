@@ -15,23 +15,40 @@ require("dotenv").config();
 db.connect();
 const app = express();
 const PORT = process.env.PORT || 5000;
-// Gọi hàm setWebhook khi server khởi chạy
 
 // Middleware
-// app.use(morgan("combined")); // HTTP Logger (console các thông tin request)
-app.use(express.static(path.join(__dirname, "public"))); // Static files
-app.use(express.urlencoded({ extended: true })); // Xử lý form
-app.use(express.json()); // Xử lý dữ liệu JSON trong request body.
+// app.use(morgan("combined"));
 
-app.use(cors()); // CORS (cho phép truy cập từ các domain khác nhau)
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs)); // api documentation
+// ❌ Remove static if no public folder
+// app.use(express.static(path.join(__dirname, "public")));
 
-app.use(responseHandler); // Thêm middleware chuẩn hóa response
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+// ✅ FIX CORS
+app.use(
+  cors({
+    origin: ["https://cf-fe-zeta.vercel.app"],
+    methods: "GET,POST,PUT,PATCH,DELETE",
+    credentials: true,
+  })
+);
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+
+app.use(responseHandler);
+
 // Routes
 route(app);
+
+// ✅ FIX route "/"
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
+
 // Start server
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("Server is running on http://0.0.0.0:" + PORT);
+  console.log("Server is running on port " + PORT);
 });
 
 module.exports = app;
